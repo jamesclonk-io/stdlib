@@ -6,6 +6,10 @@ import (
 )
 
 func init() {
+	checkEnv()
+}
+
+func checkEnv() {
 	if env.Get("JCIO_ENV", "") == "production" || // manual
 		env.Get("VCAP_APPLICATION", "") != "" || // cf / lattice
 		env.Get("DYNO", "") != "" { // heroku

@@ -2,15 +2,11 @@ package env
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Env_Get(t *testing.T) {
-	if Get("PATH", "foobar") == "foobar" {
-		t.Error("PATH exists, should not get back 'foobar' value")
-	}
-
-	// nvl test
-	if Get("foo", "bar") != "bar" {
-		t.Error("foo env var does not exist, should get back 'bar' value")
-	}
+	assert.NotEqual(t, "foobar", Get("PATH", "foobar"), "PATH env var exists, value should not be 'foobar'")
+	assert.Equal(t, "bar", Get("foo", "bar"), "foo env var does not exist, should give back 'bar' value")
 }
