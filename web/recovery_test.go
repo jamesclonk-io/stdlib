@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Recovery(t *testing.T) {
+func Test_Web_Recovery(t *testing.T) {
 	buf := bytes.NewBufferString("")
 	rec := httptest.NewRecorder()
 

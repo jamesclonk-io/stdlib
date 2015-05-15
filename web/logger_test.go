@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Logger(t *testing.T) {
+func Test_Web_Logger(t *testing.T) {
 	buf := bytes.NewBufferString("")
 	rec := httptest.NewRecorder()
 
