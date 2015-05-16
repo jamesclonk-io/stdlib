@@ -1,60 +1,49 @@
 package web
 
-import (
-	"net/http"
-
-	"github.com/unrolled/render"
-)
-
-type Page struct {
-	Title      string
-	Navbar     string
-	Content    interface{}
-	Template   string
-	StatusCode int
-	Error      error
-}
+import "net/http"
 
 type Handler func(http.ResponseWriter, *http.Request) *Page
 
-func NewHandler(title, navbar string, r *render.Render, fn Handler) http.HandlerFunc {
+func (f *Frontend) NewHandler(fn Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		page := fn(w, req)
-		page.Title = title
-		page.Navbar = navbar
 
 		if len(page.Title) == 0 {
-			page.Title = "jamesclonk.io"
+			page.Title = f.PageMaster.Title
 		}
 		if len(page.Template) == 0 {
-			page.Template = "index"
+			page.Template = f.PageMaster.Template
 		}
 		if page.StatusCode == 0 {
-			page.StatusCode = http.StatusOK
+			page.StatusCode = f.PageMaster.StatusCode
+		}
+		if page.Navbar == nil {
+			page.Navbar = f.PageMaster.Navbar
 		}
 
 		if page.Error != nil {
-			r.HTML(w, page.StatusCode, "error", page)
+			f.Render.HTML(w, page.StatusCode, "error", page)
 			return
 		}
-		r.HTML(w, page.StatusCode, page.Template, page)
+		f.Render.HTML(w, page.StatusCode, page.Template, page)
 	}
 }
 
-func NotFoundHandler(title, navbar string, r *render.Render) http.HandlerFunc {
-	return NewHandler(title, navbar, r, func(http.ResponseWriter, *http.Request) *Page {
+func (f *Frontend) NotFoundHandler(title string) http.HandlerFunc {
+	return f.NewHandler(func(http.ResponseWriter, *http.Request) *Page {
 		return &Page{
+			Title:      title,
 			StatusCode: http.StatusNotFound,
 			Template:   "404",
 		}
 	})
 }
 
-func ErrorHandler(title, navbar string, r *render.Render, err error) http.HandlerFunc {
-	return NewHandler(title, navbar, r, func(http.ResponseWriter, *http.Request) *Page {
-		return &Page{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err,
-		}
-	})
+func Error(title string, code int, err error) *Page {
+	return &Page{
+		Title:      title,
+		StatusCode: code,
+		Error:      err,
+		Template:   "error",
+	}
 }
