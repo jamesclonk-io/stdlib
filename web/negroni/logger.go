@@ -1,11 +1,11 @@
-package web
+package negroni
 
 import (
 	"net/http"
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/negroni"
+	classico "github.com/codegangsta/negroni"
 	"github.com/jamesclonk-io/stdlib/logger"
 )
 
@@ -39,7 +39,7 @@ func (l *Logger) ServeHTTP(rw http.ResponseWriter, req *http.Request, next http.
 	next(rw, req)
 
 	duration := time.Since(start)
-	res := rw.(negroni.ResponseWriter)
+	res := rw.(classico.ResponseWriter)
 	entry.WithFields(logrus.Fields{
 		"status":      res.Status(),
 		"text_status": http.StatusText(res.Status()),

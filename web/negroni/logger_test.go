@@ -1,4 +1,4 @@
-package web
+package negroni
 
 import (
 	"bytes"
@@ -7,17 +7,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/codegangsta/negroni"
+	classico "github.com/codegangsta/negroni"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Web_Logger(t *testing.T) {
+func Test_Negroni_Logger(t *testing.T) {
 	buf := bytes.NewBufferString("")
 	rec := httptest.NewRecorder()
 
 	l := NewLogger()
 	l.Logger.Out = buf
-	n := negroni.New()
+	n := classico.New()
 	n.Use(l)
 	n.UseHandler(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusNotFound)
