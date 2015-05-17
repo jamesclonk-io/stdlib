@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	classico "github.com/codegangsta/negroni"
-	"github.com/jamesclonk-io/stdlib/web"
 )
 
 type Negroni struct {
@@ -13,8 +12,8 @@ type Negroni struct {
 
 func Sbagliato() *Negroni {
 	n := classico.New()
-	n.Use(web.NewRecovery())
-	n.Use(web.NewLogger())
+	n.Use(NewRecovery())
+	n.Use(NewLogger())
 	n.Use(classico.NewStatic(http.Dir("public")))
 	return &Negroni{n}
 }
