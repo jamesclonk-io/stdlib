@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/jamesclonk-io/stdlib",
-	"GoVersion": "go1.4.1",
+	"GoVersion": "go1.4",
 	"Packages": [
 		"./..."
 	],
@@ -22,6 +22,15 @@
 		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "94903de8c98a68d8b4483c529b26a5d146e386a2"
+		},
+		{
+			"ImportPath": "github.com/russross/blackfriday",
+			"Comment": "v1.2-69-g4bed88b",
+			"Rev": "4bed88b4fd00fbb66b49b0f38ed3dd0b902ab515"
+		},
+		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "11a20b799bf22a02808c862eb6ca09f7fb38f84a"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
