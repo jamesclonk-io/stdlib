@@ -7,26 +7,29 @@ import (
 
 // Backend has control over routing and rendering
 type Backend struct {
-	Router *Router
-	Render *render.Render
+	Router         *Router
+	Render         *render.Render
+	user, password string
 }
 
 func NewBackend() *Backend {
+	// enforce TLS certs / HTTPS listener for backend
+	env.MustGet("JCIO_HTTP_CERT_FILE")
+	env.MustGet("JCIO_HTTP_KEY_FILE")
+
+	// backend needs user & password for basic auth
+	user := env.MustGet("JCIO_HTTP_AUTH_USER")
+	password := env.MustGet("JCIO_HTTP_AUTH_PASSWORD")
+
 	r := render.New(render.Options{
 		IndentJSON: true,
 	})
 	router := NewRouter()
 
-	b := &Backend{router, r}
+	b := &Backend{router, r, user, password}
 
 	// default 404
 	router.NotFoundHandler = b.NotFoundHandler(nil)
-
-	// enforce TLS certs for backend
-	if len(env.Get("HTTP_CERT_FILE", "")) == 0 ||
-		len(env.Get("HTTP_KEY_FILE", "")) == 0 {
-		panic("Using web.Backend without TLS certificates is not allowed!")
-	}
 
 	return b
 }

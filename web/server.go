@@ -26,8 +26,8 @@ func NewServer() *Server {
 
 func (s *Server) Start(handler http.Handler) {
 	s.port = env.Get("PORT", "3000")
-	s.certFile = env.Get("HTTP_CERT_FILE", "")
-	s.keyFile = env.Get("HTTP_KEY_FILE", "")
+	s.certFile = env.Get("JCIO_HTTP_CERT_FILE", "")
+	s.keyFile = env.Get("JCIO_HTTP_KEY_FILE", "")
 
 	address := ":" + s.port
 	s.Logger.WithField("address", address).Info("Start HTTP Server")

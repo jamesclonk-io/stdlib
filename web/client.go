@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -12,21 +13,18 @@ import (
 )
 
 type BackendClient struct {
-	client *http.Client
-	caFile string
-	caHost string
+	client         *http.Client
+	caFile, caHost string
+	user, password string
 }
 
 func NewBackendClient() *BackendClient {
-	caFile := env.Get("HTTP_CA_FILE", "")
-	caHost := env.Get("HTTP_CA_HOST", "")
+	caFile := env.MustGet("JCIO_HTTP_CA_FILE")
+	caHost := env.MustGet("JCIO_HTTP_CA_HOST")
 
-	if len(caFile) == 0 {
-		panic("Cannot create web.BackendClient without root CA!")
-	}
-	if len(caHost) == 0 {
-		panic("Cannot create web.BackendClient without hostname!")
-	}
+	// backends want basic auth with user & password
+	user := env.MustGet("JCIO_HTTP_AUTH_USER")
+	password := env.MustGet("JCIO_HTTP_AUTH_PASSWORD")
 
 	tlsConfig := &tls.Config{
 		RootCAs:    x509.NewCertPool(),
@@ -44,90 +42,39 @@ func NewBackendClient() *BackendClient {
 	if !ok {
 		panic("Could not load PEM data to root CA!")
 	}
-	return &BackendClient{client, caFile, caHost}
+	return &BackendClient{client, caFile, caHost, user, password}
 }
 
 func (bc *BackendClient) Get(url string) (string, error) {
-	resp, err := bc.client.Get(url)
+	req, err := bc.newRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-
-	if err := checkResponse(resp, http.StatusOK); err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
+	return bc.doRequest(req, http.StatusOK)
 }
 
 func (bc *BackendClient) Post(url, data string) (string, error) {
-	resp, err := bc.client.Post(url, "application/json", strings.NewReader(data))
+	req, err := bc.newRequest("POST", url, strings.NewReader(data))
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-
-	if err := checkResponse(resp, http.StatusCreated); err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
+	return bc.doRequest(req, http.StatusCreated)
 }
 
 func (bc *BackendClient) Put(url, data string) (string, error) {
-	req, err := http.NewRequest("PUT", url, strings.NewReader(data))
+	req, err := bc.newRequest("PUT", url, strings.NewReader(data))
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := bc.client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if err := checkResponse(resp, http.StatusOK); err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
+	return bc.doRequest(req, http.StatusOK)
 }
 
 func (bc *BackendClient) Delete(url string) (string, error) {
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := bc.newRequest("DELETE", url, nil)
 	if err != nil {
 		return "", err
 	}
-
-	resp, err := bc.client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if err := checkResponse(resp, http.StatusNoContent); err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
+	return bc.doRequest(req, http.StatusNoContent)
 }
 
 func (bc *BackendClient) HttpClient() *http.Client {
@@ -142,14 +89,43 @@ func (bc *BackendClient) Hostname() string {
 	return bc.caHost
 }
 
+func (bc *BackendClient) doRequest(req *http.Request, expectedCode int) (string, error) {
+	resp, err := bc.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if err := checkResponse(resp, expectedCode); err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func (bc *BackendClient) newRequest(method, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(bc.user, bc.password)
+
+	return req, nil
+}
+
 func checkResponse(resp *http.Response, expectedCode int) error {
 	if resp.StatusCode == expectedCode {
 		return nil
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	return errors.New(string(data))
+	return errors.New(string(body))
 }

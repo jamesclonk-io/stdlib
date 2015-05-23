@@ -31,6 +31,13 @@ func (f *Frontend) NewHandler(fn Handler) http.HandlerFunc {
 
 func (b *Backend) NewHandler(fn Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
+		// check auth
+		user, password, ok := req.BasicAuth()
+		if !ok || user != b.user || password != b.password {
+			b.Render.JSON(w, http.StatusUnauthorized, "Unauthorized!")
+			return
+		}
+
 		page := fn(w, req)
 
 		if page.StatusCode == 0 {
