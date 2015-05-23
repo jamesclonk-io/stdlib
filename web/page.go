@@ -1,5 +1,7 @@
 package web
 
+import "net/http"
+
 // PageMaster contains default values for Title, Template and StatusCode.
 // Also holds the central NavBar data.
 type PageMaster struct {
@@ -14,6 +16,7 @@ type Page struct {
 	Title      string
 	Navbar     NavBar
 	ActiveLink string
+	Headers    http.Header
 	Content    interface{}
 	Template   string
 	StatusCode int

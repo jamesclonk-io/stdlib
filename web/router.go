@@ -14,3 +14,7 @@ func NewRouter() *Router {
 func (f *Frontend) NewRoute(path string, handler Handler) *mux.Route {
 	return f.Router.Handle(path, f.NewHandler(handler))
 }
+
+func (b *Backend) NewRoute(path string, handler Handler) *mux.Route {
+	return b.Router.Handle(path, b.NewHandler(handler))
+}

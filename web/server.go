@@ -13,9 +13,9 @@ import (
 
 type Server struct {
 	Logger   *logrus.Logger
-	Port     string
-	CertFile string
-	KeyFile  string
+	port     string
+	certFile string
+	keyFile  string
 }
 
 func NewServer() *Server {
@@ -25,15 +25,11 @@ func NewServer() *Server {
 }
 
 func (s *Server) Start(handler http.Handler) {
-	if len(s.Port) == 0 {
-		s.Port = env.Get("PORT", "3000")
-	}
-	if len(s.CertFile) == 0 || len(s.KeyFile) == 0 {
-		s.CertFile = env.Get("HTTP_CERT_FILE", "")
-		s.KeyFile = env.Get("HTTP_KEY_FILE", "")
-	}
+	s.port = env.Get("PORT", "3000")
+	s.certFile = env.Get("HTTP_CERT_FILE", "")
+	s.keyFile = env.Get("HTTP_KEY_FILE", "")
 
-	address := ":" + s.Port
+	address := ":" + s.port
 	s.Logger.WithField("address", address).Info("Start HTTP Server")
 
 	server := &graceful.Server{
@@ -42,8 +38,8 @@ func (s *Server) Start(handler http.Handler) {
 	}
 
 	var err error
-	if len(s.CertFile) > 0 && len(s.KeyFile) > 0 {
-		err = server.ListenAndServeTLS(s.CertFile, s.KeyFile)
+	if len(s.certFile) > 0 && len(s.keyFile) > 0 {
+		err = server.ListenAndServeTLS(s.certFile, s.keyFile)
 	} else {
 		err = server.ListenAndServe()
 	}
@@ -52,4 +48,16 @@ func (s *Server) Start(handler http.Handler) {
 			s.Logger.Fatal(err)
 		}
 	}
+}
+
+func (s *Server) Port() string {
+	return s.port
+}
+
+func (s *Server) CertFile() string {
+	return s.certFile
+}
+
+func (s *Server) KeyFile() string {
+	return s.keyFile
 }

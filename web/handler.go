@@ -29,12 +29,42 @@ func (f *Frontend) NewHandler(fn Handler) http.HandlerFunc {
 	}
 }
 
+func (b *Backend) NewHandler(fn Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		page := fn(w, req)
+
+		if page.StatusCode == 0 {
+			page.StatusCode = http.StatusOK
+		}
+
+		if page.Headers != nil {
+			for key, values := range page.Headers {
+				w.Header().Del(key)
+				for _, value := range values {
+					w.Header().Add(key, value)
+				}
+			}
+		}
+		b.Render.JSON(w, page.StatusCode, page.Content)
+	}
+}
+
 func (f *Frontend) NotFoundHandler(title string) http.HandlerFunc {
 	return f.NewHandler(func(http.ResponseWriter, *http.Request) *Page {
 		return &Page{
 			Title:      title,
 			StatusCode: http.StatusNotFound,
 			Template:   "404",
+		}
+	})
+}
+
+func (b *Backend) NotFoundHandler(headers http.Header) http.HandlerFunc {
+	return b.NewHandler(func(http.ResponseWriter, *http.Request) *Page {
+		return &Page{
+			Headers:    headers,
+			StatusCode: http.StatusNotFound,
+			Content:    nil,
 		}
 	})
 }
