@@ -3,18 +3,18 @@ package web
 import "net/http"
 
 // PageMaster contains default values for Title, Template and StatusCode.
-// Also holds the central NavBar data.
+// Also holds the central Navigation data.
 type PageMaster struct {
 	Title      string
 	Template   string
 	StatusCode int
-	Navbar     NavBar
+	Navigation Navigation
 }
 
 // Page represents a page to be rendered on the browser.
 type Page struct {
 	Title      string
-	Navbar     NavBar
+	Navigation Navigation
 	ActiveLink string
 	Headers    http.Header
 	Content    interface{}
@@ -23,12 +23,12 @@ type Page struct {
 	Error      error
 }
 
-// NavBar represents the navigation bar for the web page.
-type NavBar []NavElement
+// Navigation represents the navigation for the web page.
+type Navigation []NavigationElement
 
-// NavElement is an element of a NavBar or nested inside another NavElement.
-type NavElement struct {
-	Name     string       `json:"name"`
-	Link     string       `json:"link,omitempty"`
-	Dropdown []NavElement `json:"dropdown,omitempty"`
+// NavigationElement is a navigation element of the web page or nested inside another NavigationElement.
+type NavigationElement struct {
+	Name     string              `json:"name"`
+	Link     string              `json:"link,omitempty"`
+	Dropdown []NavigationElement `json:"dropdown,omitempty"`
 }

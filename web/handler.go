@@ -17,8 +17,8 @@ func (f *Frontend) NewHandler(fn Handler) http.HandlerFunc {
 		if page.StatusCode == 0 {
 			page.StatusCode = f.PageMaster.StatusCode
 		}
-		if page.Navbar == nil {
-			page.Navbar = f.PageMaster.Navbar
+		if page.Navigation == nil {
+			page.Navigation = f.PageMaster.Navigation
 		}
 
 		if page.Error != nil {
