@@ -21,7 +21,7 @@ func NewFrontend(title string) *Frontend {
 		Extensions: []string{".html"},
 	})
 	router := NewRouter()
-	pm := &PageMaster{title, "index", http.StatusOK, nil}
+	pm := &PageMaster{title, nil, nil, "index", http.StatusOK, nil}
 
 	f := &Frontend{title, router, r, pm}
 

@@ -2,10 +2,11 @@ package web
 
 import "net/http"
 
-// PageMaster contains default values for Title, Template and StatusCode.
-// Also holds the central Navigation data.
+// PageMaster contains various default values.
 type PageMaster struct {
 	Title      string
+	Content    interface{}
+	Data       interface{}
 	Template   string
 	StatusCode int
 	Navigation Navigation
@@ -18,6 +19,7 @@ type Page struct {
 	ActiveLink string
 	Headers    http.Header
 	Content    interface{}
+	Data       interface{}
 	Template   string
 	StatusCode int
 	Error      error

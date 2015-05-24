@@ -11,6 +11,12 @@ func (f *Frontend) NewHandler(fn Handler) http.HandlerFunc {
 		if len(page.Title) == 0 {
 			page.Title = f.PageMaster.Title
 		}
+		if page.Content == nil {
+			page.Content = f.PageMaster.Content
+		}
+		if page.Data == nil {
+			page.Data = f.PageMaster.Data
+		}
 		if len(page.Template) == 0 {
 			page.Template = f.PageMaster.Template
 		}
