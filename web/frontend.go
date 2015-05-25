@@ -1,6 +1,8 @@
 package web
 
 import (
+	j "encoding/json"
+	"html/template"
 	"net/http"
 
 	"github.com/unrolled/render"
@@ -19,6 +21,12 @@ func NewFrontend(title string) *Frontend {
 		IndentJSON: true,
 		Layout:     "layout",
 		Extensions: []string{".html"},
+		Funcs: []template.FuncMap{template.FuncMap{
+			"isEvenNumber": isEvenNumber,
+			"isOddNumber":  isOddNumber,
+			"html":         html,
+			"json":         json,
+		}},
 	})
 	router := NewRouter()
 	pm := &PageMaster{title, nil, nil, "index", http.StatusOK, nil}
@@ -33,4 +41,24 @@ func NewFrontend(title string) *Frontend {
 
 func (f *Frontend) SetNavigation(nav Navigation) {
 	f.PageMaster.Navigation = nav
+}
+
+func isEvenNumber(input int) bool {
+	return input%2 == 0
+}
+
+func isOddNumber(input int) bool {
+	return !isEvenNumber(input)
+}
+
+func html(input string) template.HTML {
+	return template.HTML(input)
+}
+
+func json(input interface{}) template.JS {
+	bytes, err := j.Marshal(input)
+	if err != nil {
+		return ""
+	}
+	return template.JS(bytes)
 }
