@@ -14,7 +14,7 @@ func (c *CMS) ViewHandler(w http.ResponseWriter, req *http.Request) *web.Page {
 
 	// find file
 	var html template.HTML
-	for _, c := range c.data.Content {
+	for _, c := range c.Data.Content {
 		if path.Join("/", c.Path, c.Basename) == req.RequestURI {
 			html = c.Content
 		}
@@ -30,7 +30,7 @@ func (c *CMS) ViewHandler(w http.ResponseWriter, req *http.Request) *web.Page {
 	}
 
 	return &web.Page{
-		Title:      fmt.Sprintf("%s - %s", c.title, filename),
+		Title:      fmt.Sprintf("%s - %s", c.Title, filename),
 		ActiveLink: req.RequestURI,
 		Content:    content,
 		Template:   "cms",
@@ -42,11 +42,11 @@ func (c *CMS) RefreshHandler(w http.ResponseWriter, req *http.Request) *web.Page
 	defer c.mutex.Unlock()
 
 	if err := c.checkData(true); err != nil {
-		return web.Error(c.title, http.StatusInternalServerError, err)
+		return web.Error(c.Title, http.StatusInternalServerError, err)
 	}
 
 	return &web.Page{
-		Title:      c.title,
+		Title:      c.Title,
 		ActiveLink: "/",
 		Content:    nil,
 		Template:   "index",

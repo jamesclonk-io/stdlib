@@ -11,7 +11,7 @@ import (
 )
 
 func (c *CMS) readZipFromURL() (map[string][]byte, error) {
-	resp, err := http.Get(c.input)
+	resp, err := http.Get(c.Input)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (c *CMS) readZipFromURL() (map[string][]byte, error) {
 }
 
 func (c *CMS) readZipFromFile() (map[string][]byte, error) {
-	data, err := ioutil.ReadFile(c.input)
+	data, err := ioutil.ReadFile(c.Input)
 	if err != nil {
 		return nil, err
 	}

@@ -9,18 +9,17 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/jamesclonk-io/stdlib/web"
 	"github.com/russross/blackfriday"
 )
 
 func (c *CMS) checkData(refresh bool) error {
 	// reset data if not set
-	if c.data == nil {
-		c.data = &CMSData{}
+	if c.Data == nil {
+		c.Data = &CMSData{}
 	}
 
 	// refresh either every 24 hours, or if refresh parameter set to true
-	if time.Since(c.data.Timestamp).Hours() >= 24 || refresh {
+	if time.Since(c.Data.Timestamp).Hours() >= 24 || refresh {
 		// refresh cms content data
 		if err := c.refreshData(); err != nil {
 			return err
@@ -36,7 +35,7 @@ func (c *CMS) refreshData() (err error) {
 	if err := c.getData(); err != nil {
 		c.log.WithFields(logrus.Fields{
 			"error": err,
-			"file":  c.input,
+			"file":  c.Input,
 		}).Error("Could not refresh data")
 		return err
 	}
@@ -47,8 +46,8 @@ func (c *CMS) getData() error {
 	var data map[string][]byte
 	var err error
 
-	if strings.HasSuffix(c.input, ".zip") {
-		if strings.HasPrefix(c.input, "http") {
+	if strings.HasSuffix(c.Input, ".zip") {
+		if strings.HasPrefix(c.Input, "http") {
 			// read zip content from url
 			data, err = c.readZipFromURL()
 		} else {
@@ -63,7 +62,7 @@ func (c *CMS) getData() error {
 		return err
 	}
 
-	c.data = &CMSData{
+	c.Data = &CMSData{
 		Content:   make([]*CMSContent, 0),
 		Timestamp: time.Now(),
 	}
@@ -80,26 +79,22 @@ func (c *CMS) getData() error {
 				Path:     path.Dir(file),
 				Content:  template.HTML(html),
 			}
-			c.data.Content = append(c.data.Content, content)
+			c.Data.Content = append(c.Data.Content, content)
 
 		} else if basename == "navigation.json" {
-			var nav CMSNavigation
+			var nav cmsNavigation
 			if err := json.Unmarshal(bytes, &nav); err != nil {
 				return err
 			}
-			c.data.Navigation = &nav
+			c.Data.navigation = &nav
 
 		} else if basename == "configuration.json" {
-			var config CMSConfiguration
+			var config cmsConfiguration
 			if err := json.Unmarshal(bytes, &config); err != nil {
 				return err
 			}
-			c.data.Configuration = &config
+			c.Data.configuration = &config
 		}
 	}
 	return nil
-}
-
-func (c *CMS) GetNavigation() web.Navigation {
-	return c.data.Navigation.Navigation
 }

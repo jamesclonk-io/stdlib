@@ -24,6 +24,14 @@
 			"Rev": "94903de8c98a68d8b4483c529b26a5d146e386a2"
 		},
 		{
+			"ImportPath": "github.com/jteeuwen/go-pkg-rss",
+			"Rev": "5576b8d83ed75cbb4bc43ef18c07414f880b3472"
+		},
+		{
+			"ImportPath": "github.com/jteeuwen/go-pkg-xmlx",
+			"Rev": "cf505b97c711dd1c5a4682f68ea04dd35e385b8f"
+		},
+		{
 			"ImportPath": "github.com/russross/blackfriday",
 			"Comment": "v1.2-69-g4bed88b",
 			"Rev": "4bed88b4fd00fbb66b49b0f38ed3dd0b902ab515"

@@ -12,26 +12,26 @@ import (
 )
 
 type CMS struct {
-	title    string
+	Title    string
 	frontend *web.Frontend
-	data     *CMSData
-	input    string
+	Data     *CMSData
+	Input    string
 	mutex    *sync.Mutex
 	log      *logrus.Logger
 }
 
 type CMSData struct {
-	Configuration *CMSConfiguration
-	Navigation    *CMSNavigation
+	configuration *cmsConfiguration
+	navigation    *cmsNavigation
 	Content       []*CMSContent
 	Timestamp     time.Time
 }
 
-type CMSConfiguration struct {
+type cmsConfiguration struct {
 	Configuration map[string]interface{} `json:"configuration"`
 }
 
-type CMSNavigation struct {
+type cmsNavigation struct {
 	Navigation web.Navigation `json:"navigation"`
 }
 
@@ -53,4 +53,12 @@ func NewCMS(frontend *web.Frontend) (*CMS, error) {
 		return nil, err
 	}
 	return cms, nil
+}
+
+func (c *CMS) GetConfiguration() map[string]interface{} {
+	return c.Data.configuration.Configuration
+}
+
+func (c *CMS) GetNavigation() web.Navigation {
+	return c.Data.navigation.Navigation
 }

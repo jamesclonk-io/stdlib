@@ -11,7 +11,7 @@ import (
 func (c *CMS) readFromFolder() (map[string][]byte, error) {
 	data := make(map[string][]byte)
 
-	if err := filepath.Walk(c.input, c.fileWalker(data)); err != nil {
+	if err := filepath.Walk(c.Input, c.fileWalker(data)); err != nil {
 		return nil, err
 	}
 
@@ -32,7 +32,7 @@ func (c *CMS) fileWalker(data map[string][]byte) filepath.WalkFunc {
 		}
 
 		// strip away everything from path until the "root" folder
-		file = path.Join("/", strings.TrimPrefix(file, c.input))
+		file = path.Join("/", strings.TrimPrefix(file, c.Input))
 
 		data[file] = content
 
