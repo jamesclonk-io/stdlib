@@ -12,10 +12,12 @@ import (
 
 func (c *CMS) readZipFromURL() (map[string][]byte, error) {
 	resp, err := http.Get(c.Input)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
