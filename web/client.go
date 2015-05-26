@@ -91,10 +91,12 @@ func (bc *BackendClient) Hostname() string {
 
 func (bc *BackendClient) doRequest(req *http.Request, expectedCode int) (string, error) {
 	resp, err := bc.client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
 
 	if err := checkResponse(resp, expectedCode); err != nil {
 		return "", err
