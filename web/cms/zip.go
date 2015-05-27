@@ -57,9 +57,9 @@ func (c *CMS) readZip(data *bytes.Reader, size int64) (map[string][]byte, error)
 		if err != nil {
 			return nil, err
 		}
-		defer rc.Close()
 
 		data, err := ioutil.ReadAll(rc)
+		rc.Close()
 		if err != nil {
 			return nil, err
 		}
