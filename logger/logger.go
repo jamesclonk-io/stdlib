@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"os"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/jamesclonk-io/stdlib/env"
 )
@@ -14,6 +16,12 @@ func checkEnv() {
 		env.Get("VCAP_APPLICATION", "") != "" || // cf / lattice
 		env.Get("DYNO", "") != "" { // heroku
 		logrus.SetFormatter(&logrus.JSONFormatter{})
+		logrus.SetOutput(os.Stdout)
+		logrus.SetLevel(logrus.InfoLevel)
+	} else {
+		logrus.SetFormatter(&logrus.TextFormatter{})
+		logrus.SetOutput(os.Stderr)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 }
 
