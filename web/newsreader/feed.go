@@ -32,14 +32,10 @@ type Work struct {
 	URL   string
 }
 
-func (n *NewsReader) getFeeds() (feeds Feeds, err error) {
+func (n *NewsReader) GetFeeds() (feeds Feeds, err error) {
 	// check if enough time has passed and a feed update is needed
 	if n.timestamp.Add(time.Duration(n.Config.CacheDuration)).Before(time.Now()) {
 		n.timestamp = time.Now()
-
-		n.mutex.Lock()
-		defer n.mutex.Unlock()
-
 		go n.updateFeeds()
 	}
 
@@ -47,6 +43,9 @@ func (n *NewsReader) getFeeds() (feeds Feeds, err error) {
 }
 
 func (n *NewsReader) updateFeeds() {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
 	var workers = 3
 	var feeds Feeds
 	var workChan = make(chan Work, 1000)
@@ -130,11 +129,15 @@ func (n *NewsReader) updateFeeds() {
 		feeds = append(feeds, feed)
 	}
 
-	feeds.sort()
-	n.Feeds = feeds
+	// only replace feeds if we got enough of them back
+	if len(feeds) >= 4 {
+		feeds.sort()
+		n.Feeds = feeds
+	}
 }
 
 func (f Feed) Lines() int {
+	// calculate number of lines a feed will occupy
 	var lines float64
 	for _, item := range f.Items {
 		lines += math.Ceil(float64(utf8.RuneCountInString(item.Title)) / 82.0)
