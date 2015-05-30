@@ -1,9 +1,11 @@
 package newsreader
 
 import (
+	"math"
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Sirupsen/logrus"
 	rss "github.com/jteeuwen/go-pkg-rss"
@@ -11,7 +13,9 @@ import (
 
 var redditRx = regexp.MustCompile(`<br\/>\s+<a href="(.*)">\[link\]`)
 
+type Feeds []Feed
 type Feed struct {
+	Id    int
 	Title string
 	URL   string
 	Items []FeedItem
@@ -23,7 +27,12 @@ type FeedItem struct {
 	Comments string
 }
 
-func (n *NewsReader) getFeeds() (feeds []Feed, err error) {
+type Work struct {
+	Index int
+	URL   string
+}
+
+func (n *NewsReader) getFeeds() (feeds Feeds, err error) {
 	// check if enough time has passed and a feed update is needed
 	if n.timestamp.Add(time.Duration(n.Config.CacheDuration)).Before(time.Now()) {
 		n.timestamp = time.Now()
@@ -38,20 +47,21 @@ func (n *NewsReader) getFeeds() (feeds []Feed, err error) {
 }
 
 func (n *NewsReader) updateFeeds() {
-	var feeds []Feed
-	var workChan = make(chan string, 1000)
+	var workers = 3
+	var feeds Feeds
+	var workChan = make(chan Work, 1000)
 	var feedChan = make(chan Feed, 1000)
 	var doneChan = make(chan bool, 3)
 	defer close(doneChan)
 
-	channelHandler := func(feedChan chan Feed) func(*rss.Feed, []*rss.Channel) {
+	channelHandler := func(feedId int, feedChan chan Feed) func(*rss.Feed, []*rss.Channel) {
 		return func(feed *rss.Feed, channels []*rss.Channel) {
 			for _, channel := range channels {
 				reddit := strings.Contains(getFeedTitleUrl(channel), "www.reddit.com") // flag feed as reddit
 
 				var feedItems []FeedItem
 				for i, item := range channel.Items {
-					if i < 25 {
+					if i < 30 { // max items per feed
 						feedItem := FeedItem{
 							Title:    item.Title,
 							URL:      getFeedItemUrl(item),
@@ -69,6 +79,7 @@ func (n *NewsReader) updateFeeds() {
 				}
 
 				feed := Feed{
+					Id:    feedId,
 					Title: channel.Title,
 					URL:   getFeedTitleUrl(channel),
 					Items: feedItems,
@@ -78,16 +89,18 @@ func (n *NewsReader) updateFeeds() {
 		}
 	}
 
-	for w := 1; w <= 3; w++ {
-		go func(workChan chan string, feedChan chan Feed, doneChan chan bool) {
-			for url := range workChan {
-				rssFeed := rss.New(5, true, channelHandler(feedChan), nil)
-				if err := rssFeed.Fetch(url, nil); err != nil &&
+	// create n worker goroutines
+	for w := 1; w <= workers; w++ {
+		go func(workChan chan Work, feedChan chan Feed, doneChan chan bool) {
+			for work := range workChan {
+				rssFeed := rss.New(5, true, channelHandler(work.Index, feedChan), nil)
+				if err := rssFeed.Fetch(work.URL, nil); err != nil &&
 					// ignore these encoding errors
 					!strings.Contains(err.Error(), `encoding "ISO-8859-1" declared but Decoder.CharsetReader is nil`) {
 					n.log.WithFields(logrus.Fields{
-						"error": err,
-						"feed":  url,
+						"error":    err,
+						"feed_id":  work.Index,
+						"feed_url": work.URL,
 					}).Error("Could not fetch feed data")
 				}
 			}
@@ -95,20 +108,38 @@ func (n *NewsReader) updateFeeds() {
 		}(workChan, feedChan, doneChan)
 	}
 
-	for _, url := range n.Config.Feeds {
-		workChan <- url
+	// distribute work to workers
+	for idx, url := range n.Config.Feeds {
+		workChan <- Work{idx, url}
 	}
 	close(workChan)
 
-	for w := 1; w <= 3; w++ {
+	// wait till all workers are done
+	for w := 1; w <= workers; w++ {
 		<-doneChan
 	}
 	close(feedChan)
 
+	// read all feed results
 	for feed := range feedChan {
+		// cut off feed size at 30 lines
+		for feed.Lines() > 30 {
+			feed.Items = feed.Items[:len(feed.Items)-1]
+		}
+
 		feeds = append(feeds, feed)
 	}
+
+	feeds.sort()
 	n.Feeds = feeds
+}
+
+func (f Feed) Lines() int {
+	var lines float64
+	for _, item := range f.Items {
+		lines += math.Ceil(float64(utf8.RuneCountInString(item.Title)) / 82.0)
+	}
+	return len(f.Items) + ((int(lines) - len(f.Items)) / 2)
 }
 
 func getFeedTitleUrl(feed *rss.Channel) string {
