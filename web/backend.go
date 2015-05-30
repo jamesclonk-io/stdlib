@@ -10,9 +10,29 @@ type Backend struct {
 	Router         *Router
 	Render         *render.Render
 	user, password string
+	secret         []byte
+	hmac           bool
 }
 
 func NewBackend() *Backend {
+	var b *Backend
+	// use HMAC based Backend if secret is set, otherwise assume TLS
+	if len(env.Get("JCIO_HTTP_HMAC_SECRET", "")) != 0 {
+		b = newHMACBackend()
+	} else {
+		b = newTLSBackend()
+	}
+
+	b.Render = render.New(render.Options{
+		IndentJSON: true,
+	})
+	b.Router = NewRouter()
+	b.Router.NotFoundHandler = b.NotFoundHandler(nil)
+
+	return b
+}
+
+func newTLSBackend() *Backend {
 	// enforce TLS certs / HTTPS listener for backend
 	env.MustGet("JCIO_HTTP_CERT_FILE")
 	env.MustGet("JCIO_HTTP_KEY_FILE")
@@ -21,15 +41,19 @@ func NewBackend() *Backend {
 	user := env.MustGet("JCIO_HTTP_AUTH_USER")
 	password := env.MustGet("JCIO_HTTP_AUTH_PASSWORD")
 
-	r := render.New(render.Options{
-		IndentJSON: true,
-	})
-	router := NewRouter()
+	return &Backend{
+		user:     user,
+		password: password,
+		hmac:     false,
+	}
+}
 
-	b := &Backend{router, r, user, password}
+func newHMACBackend() *Backend {
+	// need preshared secret for HMAC backends
+	secret := env.MustGet("JCIO_HTTP_HMAC_SECRET")
 
-	// default 404
-	router.NotFoundHandler = b.NotFoundHandler(nil)
-
-	return b
+	return &Backend{
+		secret: []byte(secret),
+		hmac:   true,
+	}
 }

@@ -16,9 +16,36 @@ type BackendClient struct {
 	client         *http.Client
 	caFile, caHost string
 	user, password string
+	secret         []byte
+	hmac           bool
 }
 
 func NewBackendClient() *BackendClient {
+	// use HMAC based communications if secret is set, otherwise assume TLS
+	if len(env.Get("JCIO_HTTP_HMAC_SECRET", "")) != 0 {
+		return newHMACBackendClient()
+	}
+	return newTLSBackendClient()
+}
+
+func newHMACBackendClient() *BackendClient {
+	// need preshared secret for HMAC backends
+	secret := env.MustGet("JCIO_HTTP_HMAC_SECRET")
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	transport := &http.Transport{TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: transport}
+
+	return &BackendClient{
+		client: client,
+		secret: []byte(secret),
+		hmac:   true,
+	}
+}
+
+func newTLSBackendClient() *BackendClient {
 	caFile := env.MustGet("JCIO_HTTP_CA_FILE")
 	caHost := env.MustGet("JCIO_HTTP_CA_HOST")
 
@@ -42,11 +69,18 @@ func NewBackendClient() *BackendClient {
 	if !ok {
 		panic("Could not load PEM data to root CA!")
 	}
-	return &BackendClient{client, caFile, caHost, user, password}
+	return &BackendClient{
+		client:   client,
+		caFile:   caFile,
+		caHost:   caHost,
+		user:     user,
+		password: password,
+		hmac:     false,
+	}
 }
 
 func (bc *BackendClient) Get(url string) (string, error) {
-	req, err := bc.newRequest("GET", url, nil)
+	req, err := bc.newRequest("GET", url, "")
 	if err != nil {
 		return "", err
 	}
@@ -54,7 +88,7 @@ func (bc *BackendClient) Get(url string) (string, error) {
 }
 
 func (bc *BackendClient) Post(url, data string) (string, error) {
-	req, err := bc.newRequest("POST", url, strings.NewReader(data))
+	req, err := bc.newRequest("POST", url, data)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +96,7 @@ func (bc *BackendClient) Post(url, data string) (string, error) {
 }
 
 func (bc *BackendClient) Put(url, data string) (string, error) {
-	req, err := bc.newRequest("PUT", url, strings.NewReader(data))
+	req, err := bc.newRequest("PUT", url, data)
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +104,7 @@ func (bc *BackendClient) Put(url, data string) (string, error) {
 }
 
 func (bc *BackendClient) Delete(url string) (string, error) {
-	req, err := bc.newRequest("DELETE", url, nil)
+	req, err := bc.newRequest("DELETE", url, "")
 	if err != nil {
 		return "", err
 	}
@@ -109,13 +143,25 @@ func (bc *BackendClient) doRequest(req *http.Request, expectedCode int) (string,
 	return string(body), nil
 }
 
-func (bc *BackendClient) newRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (bc *BackendClient) newRequest(method, url, data string) (*http.Request, error) {
+	var body io.Reader
+	if len(data) != 0 {
+		body = strings.NewReader(data)
+	}
+
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.SetBasicAuth(bc.user, bc.password)
+
+	if bc.hmac {
+		if err := bc.addHmacHeader(method, url, data, req); err != nil {
+			return nil, err
+		}
+	} else {
+		req.SetBasicAuth(bc.user, bc.password)
+	}
 
 	return req, nil
 }

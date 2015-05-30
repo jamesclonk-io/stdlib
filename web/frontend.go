@@ -24,8 +24,8 @@ func NewFrontend(title string) *Frontend {
 		Funcs: []template.FuncMap{template.FuncMap{
 			"isEvenNumber": isEvenNumber,
 			"isOddNumber":  isOddNumber,
-			"html":         html,
-			"json":         json,
+			"html":         htmlize,
+			"json":         jsonize,
 		}},
 	})
 	router := NewRouter()
@@ -51,11 +51,11 @@ func isOddNumber(input int) bool {
 	return !isEvenNumber(input)
 }
 
-func html(input string) template.HTML {
+func htmlize(input string) template.HTML {
 	return template.HTML(input)
 }
 
-func json(input interface{}) template.JS {
+func jsonize(input interface{}) template.JS {
 	bytes, err := j.Marshal(input)
 	if err != nil {
 		return ""

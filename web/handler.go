@@ -1,6 +1,9 @@
 package web
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type Handler func(http.ResponseWriter, *http.Request) *Page
 
@@ -37,11 +40,25 @@ func (f *Frontend) NewHandler(fn Handler) http.HandlerFunc {
 
 func (b *Backend) NewHandler(fn Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		// check auth
-		user, password, ok := req.BasicAuth()
-		if !ok || user != b.user || password != b.password {
-			b.Render.JSON(w, http.StatusUnauthorized, "Unauthorized!")
-			return
+		// do auth
+		if b.hmac {
+			// hmac check when using HMAC Backend
+			ok, err := b.hmacAuth(req)
+			if err != nil {
+				b.Render.JSON(w, http.StatusInternalServerError, fmt.Sprintf("Error: %v", err))
+				return
+			}
+			if !ok {
+				b.Render.JSON(w, http.StatusUnauthorized, "Unauthorized!")
+				return
+			}
+		} else {
+			// basic auth check when using TLS Backend
+			user, password, ok := req.BasicAuth()
+			if !ok || user != b.user || password != b.password {
+				b.Render.JSON(w, http.StatusUnauthorized, "Unauthorized!")
+				return
+			}
 		}
 
 		page := fn(w, req)
