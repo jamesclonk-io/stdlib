@@ -32,5 +32,6 @@ type Navigation []NavigationElement
 type NavigationElement struct {
 	Name     string              `json:"name"`
 	Link     string              `json:"link,omitempty"`
+	Icon     string              `json:"icon,omitempty"`
 	Dropdown []NavigationElement `json:"dropdown,omitempty"`
 }
