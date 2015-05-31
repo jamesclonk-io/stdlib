@@ -32,6 +32,10 @@
 			"Rev": "cf505b97c711dd1c5a4682f68ea04dd35e385b8f"
 		},
 		{
+			"ImportPath": "github.com/phyber/negroni-gzip/gzip",
+			"Rev": "48f82605778a579cb8172122897f589e4023b537"
+		},
+		{
 			"ImportPath": "github.com/russross/blackfriday",
 			"Comment": "v1.2-69-g4bed88b",
 			"Rev": "4bed88b4fd00fbb66b49b0f38ed3dd0b902ab515"
