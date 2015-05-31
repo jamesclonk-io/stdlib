@@ -22,7 +22,7 @@ func Sbagliato() *Negroni {
 	n.Use(NewLogger())
 	n.Use(gzip.Gzip(gzip.DefaultCompression))
 	n.Use(classico.NewStatic(http.Dir("public")))
-	return &Negroni{n}
+	return n
 }
 
 func (n *Negroni) Mescolare() *Negroni {
