@@ -1,8 +1,6 @@
 package negroni
 
 import (
-	"net/http"
-
 	classico "github.com/codegangsta/negroni"
 	"github.com/phyber/negroni-gzip/gzip"
 )
@@ -21,13 +19,13 @@ func Sbagliato() *Negroni {
 	n.Use(NewRecovery())
 	n.Use(NewLogger())
 	n.Use(gzip.Gzip(gzip.DefaultCompression))
-	n.Use(classico.NewStatic(http.Dir("public")))
+	n.Use(NewStatic())
 	return n
 }
 
 func (n *Negroni) Mescolare() *Negroni {
 	n.Use(NewRecovery())
 	n.Use(NewLogger())
-	n.Use(classico.NewStatic(http.Dir("public")))
+	n.Use(NewStatic())
 	return n
 }
