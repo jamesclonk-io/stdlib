@@ -10,12 +10,12 @@ import (
 )
 
 func (c *CMS) ViewHandler(w http.ResponseWriter, req *http.Request) *web.Page {
-	filename := path.Base(req.RequestURI)
+	filename := path.Base(req.URL.RequestURI())
 
 	// find file
 	var html template.HTML
 	for _, c := range c.Data.Content {
-		if path.Join("/", c.Path, c.Basename) == req.RequestURI {
+		if path.Join("/", c.Path, c.Basename) == req.URL.RequestURI() {
 			html = c.Content
 		}
 	}
@@ -31,7 +31,7 @@ func (c *CMS) ViewHandler(w http.ResponseWriter, req *http.Request) *web.Page {
 
 	return &web.Page{
 		Title:      fmt.Sprintf("%s - %s", c.Title, filename),
-		ActiveLink: req.RequestURI,
+		ActiveLink: req.URL.RequestURI(),
 		Content:    content,
 		Template:   "cms",
 	}

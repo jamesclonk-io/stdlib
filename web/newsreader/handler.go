@@ -15,7 +15,7 @@ func (n *NewsReader) ViewHandler(w http.ResponseWriter, req *http.Request) *web.
 
 	return &web.Page{
 		Title:      fmt.Sprintf("%s - News", n.Title),
-		ActiveLink: req.RequestURI,
+		ActiveLink: req.URL.RequestURI(),
 		Content:    feeds,
 		Template:   "news",
 	}

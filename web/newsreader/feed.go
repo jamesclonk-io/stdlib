@@ -32,17 +32,21 @@ type Work struct {
 	URL   string
 }
 
+func (n *NewsReader) InitializeFeeds() {
+	n.UpdateFeeds()
+}
+
 func (n *NewsReader) GetFeeds() (feeds Feeds, err error) {
 	// check if enough time has passed and a feed update is needed
 	if n.timestamp.Add(time.Duration(n.Config.CacheDuration)).Before(time.Now()) {
-		n.timestamp = time.Now()
-		go n.updateFeeds()
+		go n.UpdateFeeds()
 	}
 
 	return n.Feeds, nil
 }
 
-func (n *NewsReader) updateFeeds() {
+func (n *NewsReader) UpdateFeeds() {
+	n.timestamp = time.Now()
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 

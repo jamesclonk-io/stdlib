@@ -21,7 +21,7 @@ func (l *Logger) ServeHTTP(rw http.ResponseWriter, req *http.Request, next http.
 	start := time.Now()
 
 	entry := l.WithFields(logrus.Fields{
-		"request": req.RequestURI,
+		"request": req.URL.RequestURI(),
 		"method":  req.Method,
 		"remote":  req.RemoteAddr,
 	})
