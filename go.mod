@@ -4,7 +4,9 @@ go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/Sirupsen/logrus v0.7.4-0.20150512173802-52919f182f9c
+	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect
@@ -29,6 +31,7 @@ require (
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-pkg-rss v0.0.0-20180208005446-cb3c88c0b82e
 	github.com/mattn/go-pkg-xmlx v0.0.0-20180208005205-db53493302d1 // indirect
+	github.com/mmcdole/gofeed v1.0.0
 	github.com/myesui/uuid v1.0.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/phyber/negroni-gzip v0.0.0-20141202101909-48f82605778a
@@ -48,7 +51,7 @@ require (
 	github.com/unrolled/render v0.0.0-20150425044026-83f2ba57c12c
 	github.com/urfave/negroni v1.0.0 // indirect
 	github.com/xeonx/timeago v1.0.0-rc4 // indirect
-	golang.org/x/net v0.0.0-20150508231843-e0403b4e0057 // indirect
+	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
 	golang.org/x/text v0.3.3 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect

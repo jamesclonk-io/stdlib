@@ -1,17 +1,16 @@
 package newsreader
 
 import (
+	"fmt"
 	"math"
-	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/Sirupsen/logrus"
-	rss "github.com/mattn/go-pkg-rss"
+	"github.com/mmcdole/gofeed"
+	"github.com/mmcdole/gofeed/rss"
 )
-
-var redditRx = regexp.MustCompile(`<br\/>\s+<a href="(.*)">\[link\]`)
 
 type Feeds []Feed
 type Feed struct {
@@ -32,6 +31,38 @@ type Work struct {
 	URL   string
 }
 
+type CommentTranslator struct {
+	defaultTranslator *gofeed.DefaultRSSTranslator
+}
+
+func NewCommentTranslator() *CommentTranslator {
+	t := &CommentTranslator{}
+
+	// We create a DefaultRSSTranslator internally so we can wrap its Translate
+	// call since we only want to modify the precedence for a single field.
+	t.defaultTranslator = &gofeed.DefaultRSSTranslator{}
+	return t
+}
+
+func (ct *CommentTranslator) Translate(feed interface{}) (*gofeed.Feed, error) {
+	rss, found := feed.(*rss.Feed)
+	if !found {
+		return nil, fmt.Errorf("Feed did not match expected type of *rss.Feed")
+	}
+
+	for i := range rss.Items {
+		if len(rss.Items[i].Comments) > 0 {
+			rss.Items[i].Link = rss.Items[i].Comments
+		}
+	}
+
+	f, err := ct.defaultTranslator.Translate(rss)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
 func (n *NewsReader) InitializeFeeds() {
 	n.UpdateFeeds()
 }
@@ -50,86 +81,49 @@ func (n *NewsReader) UpdateFeeds() {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 
-	var workers = 3
+	// go through feeds
 	var feeds Feeds
-	var workChan = make(chan Work, 1000)
-	var feedChan = make(chan Feed, 1000)
-	var doneChan = make(chan bool, 3)
-	defer close(doneChan)
+	for idx, url := range n.Config.Feeds {
+		feedParser := gofeed.NewParser()
+		feedParser.RSSTranslator = NewCommentTranslator()
+		parsedFeed, err := feedParser.ParseURL(url)
+		if err != nil &&
+			// ignore these encoding errors
+			!strings.Contains(err.Error(), `encoding "ISO-8859-1" declared but Decoder.CharsetReader is nil`) {
+			n.log.WithFields(logrus.Fields{
+				"error":    err,
+				"feed_id":  idx,
+				"feed_url": url,
+			}).Error("Could not fetch feed data")
+		}
 
-	channelHandler := func(feedId int, feedChan chan Feed) func(*rss.Feed, []*rss.Channel) {
-		return func(feed *rss.Feed, channels []*rss.Channel) {
-			for _, channel := range channels {
-				reddit := strings.Contains(getFeedTitleUrl(channel), "www.reddit.com") // flag feed as reddit
-
-				var feedItems []FeedItem
-				for i, item := range channel.Items {
-					if i < 30 { // max items per feed
-						feedItem := FeedItem{
-							Title:    item.Title,
-							URL:      getFeedItemUrl(item),
-							Comments: item.Comments,
-						}
-						// special handling for reddit (links & comments)
-						if reddit {
-							// comments url for reddit rss is actually the feed item link itself
-							feedItem.Comments = getFeedItemUrl(item)
-							feedItem.URL = getRedditFeedItemUrl(item)
-						}
-
-						feedItems = append(feedItems, feedItem)
-					}
+		var feedItems []FeedItem
+		for i, item := range parsedFeed.Items {
+			if i < 30 { // max items per feed
+				feedItem := FeedItem{
+					Title: item.Title,
+					URL:   item.Link,
 				}
-
-				feed := Feed{
-					Id:    feedId,
-					Title: channel.Title,
-					URL:   getFeedTitleUrl(channel),
-					Items: feedItems,
-				}
-				feedChan <- feed
+				// // special handling
+				// if strings.Contains(parsedFeed.Link, "www.reddit.com") {
+				// 	if len(item.Enclosures) > 0 {
+				// 		feedItem.URL = item.Enclosures[0].URL
+				// 	}
+				// }
+				feedItems = append(feedItems, feedItem)
 			}
 		}
-	}
+		feed := Feed{
+			Id:    idx,
+			Title: parsedFeed.Title,
+			URL:   parsedFeed.Link,
+			Items: feedItems,
+		}
 
-	// create n worker goroutines
-	for w := 1; w <= workers; w++ {
-		go func(workChan chan Work, feedChan chan Feed, doneChan chan bool) {
-			for work := range workChan {
-				rssFeed := rss.New(5, true, channelHandler(work.Index, feedChan), nil)
-				if err := rssFeed.Fetch(work.URL, nil); err != nil &&
-					// ignore these encoding errors
-					!strings.Contains(err.Error(), `encoding "ISO-8859-1" declared but Decoder.CharsetReader is nil`) {
-					n.log.WithFields(logrus.Fields{
-						"error":    err,
-						"feed_id":  work.Index,
-						"feed_url": work.URL,
-					}).Error("Could not fetch feed data")
-				}
-			}
-			doneChan <- true
-		}(workChan, feedChan, doneChan)
-	}
-
-	// distribute work to workers
-	for idx, url := range n.Config.Feeds {
-		workChan <- Work{idx, url}
-	}
-	close(workChan)
-
-	// wait till all workers are done
-	for w := 1; w <= workers; w++ {
-		<-doneChan
-	}
-	close(feedChan)
-
-	// read all feed results
-	for feed := range feedChan {
 		// cut off feed size at 30 lines
 		for feed.Lines() > 30 {
 			feed.Items = feed.Items[:len(feed.Items)-1]
 		}
-
 		feeds = append(feeds, feed)
 	}
 
@@ -147,30 +141,4 @@ func (f Feed) Lines() int {
 		lines += math.Ceil(float64(utf8.RuneCountInString(item.Title)) / 82.0)
 	}
 	return len(f.Items) + ((int(lines) - len(f.Items)) / 2)
-}
-
-func getFeedTitleUrl(feed *rss.Channel) string {
-	if len(feed.Links) > 0 {
-		return feed.Links[0].Href
-	}
-	return "#"
-}
-
-func getFeedItemUrl(item *rss.Item) string {
-	if len(item.Links) > 0 {
-		return item.Links[0].Href
-	}
-	return "#"
-}
-
-func getRedditFeedItemUrl(item *rss.Item) string {
-	matched := redditRx.FindStringSubmatch(item.Description)
-	if len(matched) > 1 {
-		return matched[1]
-	}
-	return "#"
-}
-
-func isFeedCommentUrl(comments string) bool {
-	return strings.HasPrefix(comments, "http")
 }
