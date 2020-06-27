@@ -1,0 +1,26 @@
+# github.com/Sirupsen/logrus v0.7.4-0.20150512173802-52919f182f9c
+github.com/Sirupsen/logrus
+# github.com/codegangsta/negroni v0.1.1-0.20150319171304-c7477ad8e330
+github.com/codegangsta/negroni
+# github.com/gorilla/context v0.0.0-20141217160251-215affda49ad
+github.com/gorilla/context
+# github.com/gorilla/mux v0.0.0-20150505170136-94903de8c98a
+github.com/gorilla/mux
+# github.com/mattn/go-pkg-rss v0.0.0-20180208005446-cb3c88c0b82e
+github.com/mattn/go-pkg-rss
+# github.com/mattn/go-pkg-xmlx v0.0.0-20180208005205-db53493302d1
+github.com/mattn/go-pkg-xmlx
+# github.com/phyber/negroni-gzip v0.0.0-20141202101909-48f82605778a
+github.com/phyber/negroni-gzip/gzip
+# github.com/russross/blackfriday v0.0.0-20150506130036-4bed88b4fd00
+github.com/russross/blackfriday
+# github.com/shurcooL/sanitized_anchor_name v0.0.0-20150515002706-11a20b799bf2
+github.com/shurcooL/sanitized_anchor_name
+# github.com/stretchr/testify v0.0.0-20150512124233-dab07ac62d49
+github.com/stretchr/testify/assert
+# github.com/tylerb/graceful v0.0.0-20150505000425-49b853e77ab5
+github.com/tylerb/graceful
+# github.com/unrolled/render v0.0.0-20150425044026-83f2ba57c12c
+github.com/unrolled/render
+# golang.org/x/net v0.0.0-20150508231843-e0403b4e0057
+golang.org/x/net/netutil

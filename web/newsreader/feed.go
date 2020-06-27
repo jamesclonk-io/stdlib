@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/Sirupsen/logrus"
-	rss "github.com/jteeuwen/go-pkg-rss"
+	rss "github.com/mattn/go-pkg-rss"
 )
 
 var redditRx = regexp.MustCompile(`<br\/>\s+<a href="(.*)">\[link\]`)
