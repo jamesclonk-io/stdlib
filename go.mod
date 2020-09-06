@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/mux v0.0.0-20150505170136-94903de8c98a
 	github.com/mmcdole/gofeed v1.0.0
 	github.com/phyber/negroni-gzip v0.0.0-20141202101909-48f82605778a
+	github.com/prometheus/client_golang v1.7.1
 	github.com/russross/blackfriday v0.0.0-20150506130036-4bed88b4fd00
 	github.com/shurcooL/sanitized_anchor_name v0.0.0-20150515002706-11a20b799bf2 // indirect
 	github.com/stretchr/testify v1.4.0
