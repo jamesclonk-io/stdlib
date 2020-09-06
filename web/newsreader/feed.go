@@ -10,6 +10,19 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/mmcdole/gofeed"
 	"github.com/mmcdole/gofeed/rss"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+var (
+	newsreaderUpdates = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "jcio_stdlib_newsreader_feeds_updated",
+		Help: "Total number of JCIO stdlib newsreader feeds updated.",
+	})
+	newsreaderFailures = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "jcio_stdlib_newsreader_feed_failures",
+		Help: "Total number of JCIO stdlib newsreader feed failures.",
+	})
 )
 
 type Feeds []Feed
@@ -95,6 +108,8 @@ func (n *NewsReader) UpdateFeeds() {
 				"feed_id":  idx,
 				"feed_url": url,
 			}).Error("Could not fetch feed data")
+			newsreaderFailures.Inc()
+			continue
 		}
 
 		var feedItems []FeedItem
@@ -125,6 +140,7 @@ func (n *NewsReader) UpdateFeeds() {
 			feed.Items = feed.Items[:len(feed.Items)-1]
 		}
 		feeds = append(feeds, feed)
+		newsreaderUpdates.Inc()
 	}
 
 	// only replace feeds if we got enough of them back
