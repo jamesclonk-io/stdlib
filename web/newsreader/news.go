@@ -27,7 +27,7 @@ type NewsConfig struct {
 
 type configJson struct {
 	Newsreader struct {
-		CacheDuration int64    `json:"cache_duration"` // in seconds
+		CacheDuration int64    `json:"cache_duration"` // in minutes
 		Feeds         []string `json:"feeds"`
 	} `json:"newsreader"`
 }
@@ -43,7 +43,7 @@ func NewReader(frontend *web.Frontend, configuration map[string]interface{}) (*N
 		return nil, err
 	}
 
-	cacheDuration, err := time.ParseDuration(fmt.Sprintf("%ds", c.Newsreader.CacheDuration))
+	cacheDuration, err := time.ParseDuration(fmt.Sprintf("%dm", c.Newsreader.CacheDuration))
 	if err != nil {
 		return nil, err
 	}

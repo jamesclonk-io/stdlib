@@ -91,7 +91,7 @@ func (f *Parser) ParseURLWithContext(feedURL string, ctx context.Context) (feed 
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	req.Header.Set("User-Agent", "Gofeed/1.0")
+	req.Header.Set("User-Agent", "JamesClonk-RSS-Reader/1.0")
 	resp, err := client.Do(req)
 
 	if err != nil {
