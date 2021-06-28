@@ -100,16 +100,19 @@ func (n *NewsReader) UpdateFeeds() {
 		feedParser := gofeed.NewParser()
 		feedParser.RSSTranslator = NewCommentTranslator()
 		parsedFeed, err := feedParser.ParseURL(url)
-		if err != nil &&
-			// ignore these encoding errors
-			!strings.Contains(err.Error(), `encoding "ISO-8859-1" declared but Decoder.CharsetReader is nil`) {
-			n.log.WithFields(logrus.Fields{
-				"error":    err,
-				"feed_id":  idx,
-				"feed_url": url,
-			}).Error("Could not fetch feed data")
-			newsreaderFailures.Inc()
-			continue
+		if err != nil {
+			if strings.Contains(err.Error(), `encoding "ISO-8859-1" declared but Decoder.CharsetReader is nil`) || // ignore these encoding errors
+				strings.Contains(err.Error(), `429 Too Many Requests`) { // ignore reddit ratelimit
+				continue
+			} else {
+				n.log.WithFields(logrus.Fields{
+					"error":    err,
+					"feed_id":  idx,
+					"feed_url": url,
+				}).Error("Could not fetch feed data")
+				newsreaderFailures.Inc()
+				continue
+			}
 		}
 
 		var feedItems []FeedItem
