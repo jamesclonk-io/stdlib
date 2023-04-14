@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"html"
 	"regexp"
-	"strconv"
 	"strings"
 
 	xpp "github.com/mmcdole/goxpp"
@@ -23,6 +23,26 @@ var (
 
 const CDATA_START = "<![CDATA["
 const CDATA_END = "]]>"
+
+// FindRoot iterates through the tokens of an xml document until
+// it encounters its first StartTag event.  It returns an error
+// if it reaches EndDocument before finding a tag.
+func FindRoot(p *xpp.XMLPullParser) (event xpp.XMLEventType, err error) {
+	for {
+		event, err = p.Next()
+		if err != nil {
+			return event, err
+		}
+		if event == xpp.StartTag {
+			break
+		}
+
+		if event == xpp.EndDocument {
+			return event, fmt.Errorf("Failed to find root node before document end.")
+		}
+	}
+	return
+}
 
 // ParseText is a helper function for parsing the text
 // from the current element of the XMLPullParser.
@@ -119,47 +139,7 @@ func DecodeEntities(str string) (string, error) {
 			buf.Write(data)
 			return buf.String(), nil
 		} else {
-			if data[1] == '#' {
-				// Numerical character reference
-				var str string
-				base := 10
-
-				if len(data) > 2 && data[2] == 'x' {
-					str = string(data[3:end])
-					base = 16
-				} else {
-					str = string(data[2:end])
-				}
-
-				i, err := strconv.ParseUint(str, base, 32)
-				if err != nil {
-					return "", InvalidNumericReference
-				}
-
-				buf.WriteRune(rune(i))
-			} else {
-				// Predefined entity
-				name := string(data[1:end])
-
-				var c byte
-				switch name {
-				case "lt":
-					c = '<'
-				case "gt":
-					c = '>'
-				case "quot":
-					c = '"'
-				case "apos":
-					c = '\''
-				case "amp":
-					c = '&'
-				default:
-					return "", fmt.Errorf("unknown predefined "+
-						"entity &%s;", name)
-				}
-
-				buf.WriteByte(c)
-			}
+			buf.WriteString(html.UnescapeString(string(data[0 : end+1])))
 		}
 
 		// Skip the entity
