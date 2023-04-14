@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/jamesclonk-io/stdlib/env"
 	"github.com/jamesclonk-io/stdlib/logger"
+	"github.com/sirupsen/logrus"
 	"github.com/tylerb/graceful"
 )
 

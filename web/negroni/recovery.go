@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/jamesclonk-io/stdlib/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type Recovery struct {

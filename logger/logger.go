@@ -3,8 +3,8 @@ package logger
 import (
 	"os"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/jamesclonk-io/stdlib/env"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {

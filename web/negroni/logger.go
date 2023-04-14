@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	classico "github.com/codegangsta/negroni"
 	"github.com/jamesclonk-io/stdlib/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type Logger struct {

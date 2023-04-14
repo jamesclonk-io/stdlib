@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/russross/blackfriday"
+	"github.com/sirupsen/logrus"
 )
 
 func (c *CMS) checkData(refresh bool) error {
